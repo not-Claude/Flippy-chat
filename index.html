@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Flippy Chats AI</title>
 
   <!-- Парсер Markdown -->
@@ -23,18 +23,23 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    body {
-      display: flex;
-      height: 100vh;
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
       background-color: #f4f4f6;
       color: #1c1c1e;
-      overflow: hidden;
+    }
+
+    body {
+      display: flex;
       user-select: none;
     }
 
     /* БОКОВАЯ ПАНЕЛЬ */
     .sidebar {
       width: 280px;
+      height: 100dvh;
       background-color: #f4f4f6;
       display: flex;
       flex-direction: column;
@@ -206,38 +211,26 @@
       color: #3a3a3c;
     }
 
-    .lock-btn {
-      background: none;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      color: #8e8e93;
-      padding: 4px;
-      border-radius: 6px;
-    }
-
-    .lock-btn:hover {
-      color: #ff3b30;
-      background: #f0f0f0;
-    }
-
-    /* ОСНОВНАЯ ОБЛАСТЬ ЧАТА */
+    /* ОСНОВНАЯ ОБЛАСТЬ ЧАТА (ИСПРАВЛЕНА ВЫСОТА И ОВЕРФЛОУ) */
     .main-container {
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 16px;
-      gap: 12px;
-      height: 100vh;
-      position: relative;
+      padding: 12px 16px;
+      gap: 10px;
+      height: 100dvh;
+      max-height: 100dvh;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
     .chat-window {
       flex: 1;
+      min-height: 0; /* Важно для flex-скролла */
       background: #ffffff;
       border-radius: 12px;
       border: 1px solid #e5e5e8;
-      padding: 20px;
+      padding: 16px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -269,12 +262,22 @@
       border-radius: 14px 14px 2px 14px;
       color: #1c1c1e;
       max-width: 80%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .message.assistant {
       align-self: flex-start;
       width: 100%;
       color: #1c1c1e;
+    }
+
+    .msg-img {
+      max-width: 240px;
+      max-height: 200px;
+      border-radius: 8px;
+      object-fit: cover;
     }
 
     pre {
@@ -288,16 +291,45 @@
       margin: 10px 0;
     }
 
-    /* ПОЛЕ ВВОДА */
+    /* ПОЛЕ ВВОДА И ПРЕВЬЮ ФАЙЛОВ */
     .input-container {
+      flex-shrink: 0;
       background: #ffffff;
       border-radius: 12px;
       border: 1px solid #e5e5e8;
-      padding: 12px 16px;
+      padding: 10px 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+
+    .file-preview-bar {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: #f4f4f6;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      width: fit-content;
+    }
+
+    .file-preview-bar img {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      object-fit: cover;
+    }
+
+    .remove-file-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #ff3b30;
+      font-weight: bold;
+      font-size: 14px;
+      margin-left: 4px;
     }
 
     .input-container textarea {
@@ -305,7 +337,7 @@
       border: none;
       outline: none;
       resize: none;
-      height: 48px;
+      height: 40px;
       font-size: 14px;
       color: #1c1c1e;
       user-select: text;
@@ -327,7 +359,11 @@
       border: none;
       cursor: pointer;
       color: #6e6e73;
-      font-size: 15px;
+      font-size: 16px;
+    }
+
+    .tool-icon:hover {
+      color: #000;
     }
 
     .send-btn {
@@ -349,150 +385,19 @@
       background: #000000;
       color: #ffffff;
     }
-
-    /* 🔒 ЭКРАН БЛОКИРОВКИ PIN ПАНЕЛЬ */
-    .pin-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(244, 244, 246, 0.97);
-      backdrop-filter: blur(20px);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .pin-card {
-      background: #ffffff;
-      padding: 32px 28px;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-      border: 1px solid #e5e5e8;
-      text-align: center;
-      width: 320px;
-    }
-
-    .pin-icon {
-      font-size: 32px;
-      margin-bottom: 12px;
-    }
-
-    .pin-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #1c1c1e;
-      margin-bottom: 6px;
-    }
-
-    .pin-subtitle {
-      font-size: 12px;
-      color: #8e8e93;
-      margin-bottom: 20px;
-    }
-
-    .pin-dots {
-      display: flex;
-      justify-content: center;
-      gap: 14px;
-      margin-bottom: 24px;
-    }
-
-    .pin-dot {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      border: 2px solid #c7c7cc;
-      transition: all 0.2s;
-    }
-
-    .pin-dot.filled {
-      background: #000000;
-      border-color: #000000;
-      transform: scale(1.1);
-    }
-
-    .pin-keypad {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .key-btn {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      border: 1px solid #e5e5e8;
-      background: #f8f8fa;
-      font-size: 20px;
-      font-weight: 500;
-      color: #1c1c1e;
-      cursor: pointer;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.15s, transform 0.1s;
-    }
-
-    .key-btn:active {
-      background: #e0e0e4;
-      transform: scale(0.95);
-    }
-
-    .pin-error {
-      color: #ff3b30;
-      font-size: 12px;
-      min-height: 16px;
-      margin-top: 8px;
-    }
   </style>
 </head>
 <body>
 
-  <!-- 🔒 Экран ввода ПИН-кода -->
-  <div class="pin-overlay" id="pinOverlay">
-    <div class="pin-card">
-      <div class="pin-icon">🔐</div>
-      <div class="pin-title" id="pinTitle">Защищенный вход</div>
-      <div class="pin-subtitle" id="pinSubtitle">Шифрование AES-256 + Cloudflare Shield</div>
-
-      <div class="pin-dots">
-        <div class="pin-dot" id="dot0"></div>
-        <div class="pin-dot" id="dot1"></div>
-        <div class="pin-dot" id="dot2"></div>
-        <div class="pin-dot" id="dot3"></div>
-      </div>
-
-      <div class="pin-keypad">
-        <button class="key-btn" onclick="pressKey('1')">1</button>
-        <button class="key-btn" onclick="pressKey('2')">2</button>
-        <button class="key-btn" onclick="pressKey('3')">3</button>
-        <button class="key-btn" onclick="pressKey('4')">4</button>
-        <button class="key-btn" onclick="pressKey('5')">5</button>
-        <button class="key-btn" onclick="pressKey('6')">6</button>
-        <button class="key-btn" onclick="pressKey('7')">7</button>
-        <button class="key-btn" onclick="pressKey('8')">8</button>
-        <button class="key-btn" onclick="pressKey('9')">9</button>
-        <button class="key-btn" style="font-size:14px;" onclick="clearPin()">C</button>
-        <button class="key-btn" onclick="pressKey('0')">0</button>
-        <button class="key-btn" style="font-size:14px;" onclick="backspacePin()">⌫</button>
-      </div>
-
-      <div class="pin-error" id="pinError"></div>
-    </div>
-  </div>
+  <!-- Скрытый инпут выбора файлов -->
+  <input type="file" id="fileInput" accept="image/*" style="display: none;">
 
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-title">
         Flippy chats
-        <span class="security-badge">Secured</span>
+        <span class="security-badge">Auto-Encrypted</span>
       </div>
       <button class="icon-btn" id="newChatBtn" title="Новый чат">+</button>
     </div>
@@ -511,7 +416,6 @@
         <div class="avatar">F</div>
         <div class="user-email">flippy@figma.com</div>
       </div>
-      <button class="lock-btn" id="lockBtn" title="Заблокировать">🔒</button>
     </div>
   </div>
 
@@ -521,10 +425,17 @@
 
     <!-- Input Box -->
     <div class="input-container">
+      <div class="file-preview-bar" id="filePreviewBar">
+        <img id="filePreviewThumb" src="" alt="preview">
+        <span id="filePreviewName">file.png</span>
+        <button class="remove-file-btn" id="removeFileBtn">✕</button>
+      </div>
+
       <textarea id="userInput" placeholder="Что вы хотите узнать?"></textarea>
+
       <div class="input-actions">
         <div class="action-tools">
-          <button class="tool-icon" title="Загрузить файл">🖼️</button>
+          <button class="tool-icon" id="attachFileBtn" title="Прикрепить изображение">🖼️</button>
           <button class="tool-icon" title="Вставить код">&lt;/&gt;</button>
           <button class="tool-icon" title="Голос">🎙️</button>
         </div>
@@ -534,264 +445,124 @@
   </div>
 
   <script>
-    // ========================================================
-    // 🌐 URL ЗАЩИЩЕННОГО CLOUDFLARE WORKER
-    // (API-ключ спрятан на сервере Cloudflare)
-    // ========================================================
     const WORKER_ENDPOINT = "https://billowing-king-7514.fialkamy001.workers.dev";
-
-    let userPin = "";
-    let activePinBuffer = "";
-    let isPinSetupMode = false;
-    let setupFirstPin = "";
-    let failedAttempts = 0;
-    let lockUntilTime = 0;
 
     let decryptedChats = [];
     let currentChatId = null;
-    let autoLockTimer = null;
+    let attachedFile = null; // { mimeType, base64, previewUrl, fileName }
 
-    // --------------------------------------------------------
-    // 🛡️ БАНКОВСКОЕ ШИФРОВАНИЕ (WEB CRYPTO API AES-GCM 256)
-    // --------------------------------------------------------
-    async function deriveKey(pin, salt) {
-      const enc = new TextEncoder();
-      const keyMaterial = await crypto.subtle.importKey(
-        "raw", enc.encode(pin), { name: "PBKDF2" }, false, ["deriveKey"]
-      );
-      return crypto.subtle.deriveKey(
-        {
-          name: "PBKDF2",
-          salt: salt,
-          iterations: 100000,
-          hash: "SHA-256"
-        },
-        keyMaterial,
-        { name: "AES-GCM", length: 256 },
-        false,
-        ["encrypt", "decrypt"]
-      );
+    // 🔑 АВТОМАТИЧЕСКИЙ КЛЮЧ
+    function getOrCreateAutoKey() {
+      let key = localStorage.getItem('auto_device_key');
+      if (!key) {
+        const array = new Uint8Array(32);
+        crypto.getRandomValues(array);
+        key = Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
+        localStorage.setItem('auto_device_key', key);
+      }
+      return key;
     }
 
-    async function encryptPayload(dataObj, pin) {
+    const autoKey = getOrCreateAutoKey();
+
+    // 🛡️ AES-256-GCM ШИФРОВАНИЕ
+    async function deriveKey(passphrase, salt) {
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(passphrase), { name: "PBKDF2" }, false, ["deriveKey"]);
+      return crypto.subtle.deriveKey({ name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" }, keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+    }
+
+    async function encryptPayload(dataObj, passphrase) {
       const salt = crypto.getRandomValues(new Uint8Array(16));
       const iv = crypto.getRandomValues(new Uint8Array(12));
-      const key = await deriveKey(pin, salt);
+      const key = await deriveKey(passphrase, salt);
       const enc = new TextEncoder();
-      const ciphertext = await crypto.subtle.encrypt(
-        { name: "AES-GCM", iv: iv },
-        key,
-        enc.encode(JSON.stringify(dataObj))
-      );
-      return {
-        salt: Array.from(salt),
-        iv: Array.from(iv),
-        ciphertext: Array.from(new Uint8Array(ciphertext))
-      };
+      const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, enc.encode(JSON.stringify(dataObj)));
+      return { salt: Array.from(salt), iv: Array.from(iv), ciphertext: Array.from(new Uint8Array(ciphertext)) };
     }
 
-    async function decryptPayload(encryptedObj, pin) {
+    async function decryptPayload(encryptedObj, passphrase) {
       const salt = new Uint8Array(encryptedObj.salt);
       const iv = new Uint8Array(encryptedObj.iv);
       const ciphertext = new Uint8Array(encryptedObj.ciphertext);
-      const key = await deriveKey(pin, salt);
-      const decrypted = await crypto.subtle.decrypt(
-        { name: "AES-GCM", iv: iv },
-        key,
-        ciphertext
-      );
-      const dec = new TextDecoder();
-      return JSON.parse(dec.decode(decrypted));
+      const key = await deriveKey(passphrase, salt);
+      const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, ciphertext);
+      return JSON.parse(new TextDecoder().decode(decrypted));
     }
 
-    // --------------------------------------------------------
-    // 🔐 УПРАВЛЕНИЕ СЕССИЕЙ И ПИН-КОДОМ
-    // --------------------------------------------------------
-    window.addEventListener('DOMContentLoaded', () => {
-      checkPinStatus();
-      resetInactivityTimer();
-      document.getElementById('lockBtn').addEventListener('click', lockSession);
-    });
-
-    function checkPinStatus() {
-      const hasToken = localStorage.getItem('bank_verify_token');
-      if (!hasToken) {
-        isPinSetupMode = true;
-        document.getElementById('pinTitle').textContent = "Создайте ПИН-код";
-        document.getElementById('pinSubtitle').textContent = "Для защиты сообщений в LocalStorage";
-      } else {
-        isPinSetupMode = false;
-        document.getElementById('pinTitle').textContent = "Защищенный вход";
-        document.getElementById('pinSubtitle').textContent = "Введите ПИН-код для расшифровки";
-      }
-    }
-
-    function pressKey(num) {
-      if (Date.now() < lockUntilTime) {
-        showPinError(`Блокировка еще ${Math.ceil((lockUntilTime - Date.now()) / 1000)} сек.`);
-        return;
-      }
-      if (activePinBuffer.length < 4) {
-        activePinBuffer += num;
-        updatePinDots();
-        if (activePinBuffer.length === 4) {
-          setTimeout(handlePinSubmit, 100);
-        }
-      }
-    }
-
-    function clearPin() {
-      activePinBuffer = "";
-      updatePinDots();
-      showPinError("");
-    }
-
-    function backspacePin() {
-      if (activePinBuffer.length > 0) {
-        activePinBuffer = activePinBuffer.slice(0, -1);
-        updatePinDots();
-      }
-    }
-
-    function updatePinDots() {
-      for (let i = 0; i < 4; i++) {
-        const dot = document.getElementById(`dot${i}`);
-        dot.classList.toggle('filled', i < activePinBuffer.length);
-      }
-    }
-
-    function showPinError(msg) {
-      document.getElementById('pinError').textContent = msg;
-    }
-
-    async function handlePinSubmit() {
-      const enteredPin = activePinBuffer;
-
-      if (isPinSetupMode) {
-        if (!setupFirstPin) {
-          setupFirstPin = enteredPin;
-          activePinBuffer = "";
-          updatePinDots();
-          document.getElementById('pinTitle').textContent = "Повторите ПИН-код";
-          return;
-        } else {
-          if (enteredPin !== setupFirstPin) {
-            showPinError("ПИН-коды не совпадают!");
-            setupFirstPin = "";
-            activePinBuffer = "";
-            updatePinDots();
-            document.getElementById('pinTitle').textContent = "Создайте ПИН-код";
-            return;
-          }
-          userPin = enteredPin;
-          const verifyPayload = await encryptPayload("BANK_VERIFY_SUCCESS", userPin);
-          localStorage.setItem('bank_verify_token', JSON.stringify(verifyPayload));
-          
-          decryptedChats = [];
-          await saveChatsEncrypted();
-          unlockApp();
-          return;
-        }
-      }
-
-      try {
-        const verifyToken = JSON.parse(localStorage.getItem('bank_verify_token'));
-        const check = await decryptPayload(verifyToken, enteredPin);
-        
-        if (check === "BANK_VERIFY_SUCCESS") {
-          userPin = enteredPin;
-          failedAttempts = 0;
-          await loadChatsDecrypted();
-          unlockApp();
-        }
-      } catch (err) {
-        failedAttempts++;
-        activePinBuffer = "";
-        updatePinDots();
-
-        if (failedAttempts >= 3) {
-          lockUntilTime = Date.now() + 30000;
-          showPinError("Слишком много попыток! Заблокировано на 30с");
-        } else {
-          showPinError(`Неверный ПИН! Осталось попыток: ${3 - failedAttempts}`);
-        }
-      }
-    }
-
-    function unlockApp() {
-      document.getElementById('pinOverlay').style.display = 'none';
-      activePinBuffer = "";
-      updatePinDots();
+    // 📁 ИНИЦИАЛИЗАЦИЯ
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadChatsDecrypted();
       renderChatList();
       if (decryptedChats.length > 0) {
         selectChat(decryptedChats[0].id);
       } else {
         createNewChat();
       }
-    }
-
-    function lockSession() {
-      userPin = "";
-      decryptedChats = [];
-      currentChatId = null;
-      activePinBuffer = "";
-      updatePinDots();
-      document.getElementById('chatWindow').replaceChildren();
-      document.getElementById('chatList').replaceChildren();
-      document.getElementById('pinOverlay').style.display = 'flex';
-      checkPinStatus();
-    }
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden && userPin !== "") {
-        lockSession();
-      }
     });
 
-    function resetInactivityTimer() {
-      clearTimeout(autoLockTimer);
-      autoLockTimer = setTimeout(() => {
-        if (userPin !== "") {
-          lockSession();
-        }
-      }, 120000);
-    }
-
-    ['mousemove', 'keydown', 'click', 'scroll'].forEach(evt => {
-      window.addEventListener(evt, resetInactivityTimer);
-    });
-
-    // --------------------------------------------------------
-    // 📁 LOCAL STORAGE ХРАНИЛИЩЕ ЧАТОВ
-    // --------------------------------------------------------
     async function saveChatsEncrypted() {
-      if (!userPin) return;
-      const encrypted = await encryptPayload(decryptedChats, userPin);
+      const encrypted = await encryptPayload(decryptedChats, autoKey);
       localStorage.setItem('bank_encrypted_chats', JSON.stringify(encrypted));
     }
 
     async function loadChatsDecrypted() {
       const rawData = localStorage.getItem('bank_encrypted_chats');
-      if (!rawData) {
-        decryptedChats = [];
-        return;
-      }
+      if (!rawData) { decryptedChats = []; return; }
       try {
         const encryptedObj = JSON.parse(rawData);
-        decryptedChats = await decryptPayload(encryptedObj, userPin);
+        decryptedChats = await decryptPayload(encryptedObj, autoKey);
       } catch (e) {
         console.error("Ошибка расшифровки:", e);
         decryptedChats = [];
       }
     }
 
-    function createNewChat() {
-      const newChat = {
-        id: "chat_" + Date.now(),
-        title: "Новый чат",
-        messages: [],
-        createdAt: Date.now()
+    // 🖼️ ОБРАБОТКА ВЫБОРА ФАЙЛОВ
+    const fileInput = document.getElementById('fileInput');
+    const attachFileBtn = document.getElementById('attachFileBtn');
+    const filePreviewBar = document.getElementById('filePreviewBar');
+    const filePreviewThumb = document.getElementById('filePreviewThumb');
+    const filePreviewName = document.getElementById('filePreviewName');
+    const removeFileBtn = document.getElementById('removeFileBtn');
+
+    attachFileBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const fullDataUrl = event.target.result;
+        const base64Data = fullDataUrl.split(',')[1];
+        
+        attachedFile = {
+          mimeType: file.type,
+          base64: base64Data,
+          previewUrl: fullDataUrl,
+          fileName: file.name
+        };
+
+        filePreviewThumb.src = fullDataUrl;
+        filePreviewName.textContent = file.name;
+        filePreviewBar.style.display = 'flex';
+        checkSendBtnState();
       };
+      reader.readAsDataURL(file);
+    });
+
+    removeFileBtn.addEventListener('click', clearAttachedFile);
+
+    function clearAttachedFile() {
+      attachedFile = null;
+      fileInput.value = '';
+      filePreviewBar.style.display = 'none';
+      checkSendBtnState();
+    }
+
+    function createNewChat() {
+      const newChat = { id: "chat_" + Date.now(), title: "Новый чат", messages: [], createdAt: Date.now() };
       decryptedChats.unshift(newChat);
       currentChatId = newChat.id;
       saveChatsEncrypted();
@@ -820,9 +591,7 @@
       const chatListEl = document.getElementById('chatList');
       chatListEl.replaceChildren();
 
-      const filtered = decryptedChats.filter(c => 
-        c.title.toLowerCase().includes(filterQuery.toLowerCase())
-      );
+      const filtered = decryptedChats.filter(c => c.title.toLowerCase().includes(filterQuery.toLowerCase()));
 
       filtered.forEach(chat => {
         const item = document.createElement('div');
@@ -835,9 +604,8 @@
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-chat-btn';
-        deleteBtn.title = 'Удалить';
         deleteBtn.textContent = '🗑️';
-        deleteBtn.addEventListener('click', (event) => deleteChat(chat.id, event));
+        deleteBtn.addEventListener('click', (e) => deleteChat(chat.id, e));
 
         item.appendChild(titleSpan);
         item.appendChild(deleteBtn);
@@ -845,10 +613,7 @@
       });
     }
 
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      renderChatList(e.target.value);
-    });
-
+    document.getElementById('searchInput').addEventListener('input', (e) => renderChatList(e.target.value));
     document.getElementById('newChatBtn').addEventListener('click', createNewChat);
 
     function renderMessages() {
@@ -859,33 +624,23 @@
       if (!currentChat || currentChat.messages.length === 0) {
         const emptyState = document.createElement('div');
         emptyState.className = 'empty-state';
-        
-        const h3 = document.createElement('h3');
-        h3.textContent = 'Чем я могу помочь вам сегодня?';
-        
-        const p = document.createElement('p');
-        p.textContent = 'Защищено от XSS, Cloudflare Shield и AES-256';
-
-        emptyState.appendChild(h3);
-        emptyState.appendChild(p);
+        emptyState.innerHTML = `<h3>Чем я могу помочь вам сегодня?</h3><p>Защищено от XSS, Cloudflare Shield и AES-256</p>`;
         chatWindow.appendChild(emptyState);
         return;
       }
 
-      currentChat.messages.forEach(msg => {
-        appendMessageUI(msg.role, msg.content);
-      });
+      currentChat.messages.forEach(msg => appendMessageUI(msg.role, msg.content, msg.image));
     }
 
-    // --------------------------------------------------------
-    // 💬 ОТПРАВКА ЗАПРОСА В CLOUDFLARE WORKER
-    // --------------------------------------------------------
+    // 💬 ОТПРАВКА СООБЩЕНИЯ
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
 
-    userInput.addEventListener('input', () => {
-      sendBtn.classList.toggle('active', userInput.value.trim().length > 0);
-    });
+    function checkSendBtnState() {
+      sendBtn.classList.toggle('active', userInput.value.trim().length > 0 || attachedFile !== null);
+    }
+
+    userInput.addEventListener('input', checkSendBtnState);
 
     userInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -898,24 +653,25 @@
 
     async function sendMessage() {
       const text = userInput.value.trim();
-      if (!text) return;
+      if (!text && !attachedFile) return;
 
-      if (!currentChatId) {
-        createNewChat();
-      }
+      if (!currentChatId) createNewChat();
 
       const currentChat = decryptedChats.find(c => c.id === currentChatId);
 
       if (currentChat.messages.length === 0) {
-        currentChat.title = text.length > 25 ? text.substring(0, 25) + "..." : text;
+        const titleText = text || (attachedFile ? "Изображение" : "Новый чат");
+        currentChat.title = titleText.length > 25 ? titleText.substring(0, 25) + "..." : titleText;
         renderChatList();
       }
 
+      const activeFile = attachedFile;
       userInput.value = '';
-      sendBtn.classList.remove('active');
+      clearAttachedFile();
 
-      currentChat.messages.push({ role: 'user', content: text });
-      appendMessageUI('user', text);
+      const userMsgObj = { role: 'user', content: text, image: activeFile ? activeFile.previewUrl : null };
+      currentChat.messages.push(userMsgObj);
+      appendMessageUI('user', text, activeFile ? activeFile.previewUrl : null);
       await saveChatsEncrypted();
 
       const chatWindow = document.getElementById('chatWindow');
@@ -926,64 +682,57 @@
       chatWindow.appendChild(loadingDiv);
       chatWindow.scrollTop = chatWindow.scrollHeight;
 
-      const geminiContents = currentChat.messages.map(m => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
-      }));
+      // Формирование Payload для Gemini API
+      const geminiContents = currentChat.messages.map(m => {
+        const parts = [];
+        if (m.content) parts.push({ text: m.content });
+        return {
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: parts
+        };
+      });
+
+      // Прикрепляем картинку к последнему запросу
+      if (activeFile) {
+        const lastParts = geminiContents[geminiContents.length - 1].parts;
+        lastParts.push({
+          inlineData: {
+            mimeType: activeFile.mimeType,
+            data: activeFile.base64
+          }
+        });
+      }
 
       try {
         const response = await fetch(WORKER_ENDPOINT, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contents: geminiContents })
         });
 
-        let responseData = null;
         const rawText = await response.text();
-        try {
-          responseData = JSON.parse(rawText);
-        } catch(e) {
-          responseData = { rawResponseBody: rawText };
-        }
+        let responseData;
+        try { responseData = JSON.parse(rawText); } catch(e) { responseData = { rawResponseBody: rawText }; }
 
-        if (loadingDiv.parentNode) {
-          chatWindow.removeChild(loadingDiv);
-        }
+        if (loadingDiv.parentNode) chatWindow.removeChild(loadingDiv);
 
-        if (response.ok && responseData && responseData.candidates && responseData.candidates[0]?.content?.parts?.[0]?.text) {
+        if (response.ok && responseData?.candidates?.[0]?.content?.parts?.[0]?.text) {
           const reply = responseData.candidates[0].content.parts[0].text;
           currentChat.messages.push({ role: 'assistant', content: reply });
           appendMessageUI('assistant', reply);
           await saveChatsEncrypted();
         } else {
-          const httpStatus = response.status || 'Unknown Status';
-          const statusText = response.statusText || '';
           const formattedDetails = JSON.stringify(responseData, null, 2);
-
-          const errorMarkdown = `❌ **Ошибка сервера [HTTP ${httpStatus}${statusText}]**\n\n` +
-                                `\`\`\`json\n${formattedDetails}\n\`\`\``;
-          
-          appendMessageUI('assistant', errorMarkdown);
+          appendMessageUI('assistant', `❌ **Ошибка сервера [HTTP ${response.status}]**\n\`\`\`json\n${formattedDetails}\n\`\`\``);
         }
 
       } catch (err) {
-        if (loadingDiv.parentNode) {
-          chatWindow.removeChild(loadingDiv);
-        }
-
-        const networkErrorMarkdown = `❌ **Ошибка сети / подключения**\n\n` +
-                                     `**Детали:** ${err.message}\n` +
-                                     `\`\`\`text\n${err.stack || err.toString()}\n\`\`\``;
-
-        appendMessageUI('assistant', networkErrorMarkdown);
-        console.error('Ошибка Worker / Gemini API:', err);
+        if (loadingDiv.parentNode) chatWindow.removeChild(loadingDiv);
+        appendMessageUI('assistant', `❌ **Ошибка сети:** ${err.message}`);
       }
     }
 
-    // 🛡️ ОТОБРАЖЕНИЕ СООБЩЕНИЙ С ОЧИСТКОЙ ЧЕРЕЗ DOMPURIFY
-    function appendMessageUI(role, text) {
+    function appendMessageUI(role, text, imageUrl = null) {
       const chatWindow = document.getElementById('chatWindow');
       const emptyState = chatWindow.querySelector('.empty-state');
       if (emptyState) emptyState.remove();
@@ -991,16 +740,22 @@
       const msgDiv = document.createElement('div');
       msgDiv.className = `message ${role}`;
 
-      if (role === 'assistant') {
-        const rawHtml = marked.parse(text);
-        const cleanHtml = DOMPurify.sanitize(rawHtml);
-        
-        msgDiv.innerHTML = cleanHtml;
-        msgDiv.querySelectorAll('pre code').forEach((block) => {
-          hljs.highlightElement(block);
-        });
-      } else {
-        msgDiv.textContent = text;
+      if (imageUrl) {
+        const imgEl = document.createElement('img');
+        imgEl.className = 'msg-img';
+        imgEl.src = imageUrl;
+        msgDiv.appendChild(imgEl);
+      }
+
+      if (text) {
+        const textContainer = document.createElement('div');
+        if (role === 'assistant') {
+          textContainer.innerHTML = DOMPurify.sanitize(marked.parse(text));
+          textContainer.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+        } else {
+          textContainer.textContent = text;
+        }
+        msgDiv.appendChild(textContainer);
       }
 
       chatWindow.appendChild(msgDiv);
