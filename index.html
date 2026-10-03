@@ -332,7 +332,7 @@ async function sendMessage(override){
 
   const loading=appendMessageUI('assistant','',null,null,true);
 
-  // Сообщения в формате Gemini API
+  // Формат для Gemini API
   const geminiContents=currentChat.messages.map(m=>{
     const parts=[];
     if(m.content)parts.push({text:m.content});
@@ -351,7 +351,7 @@ async function sendMessage(override){
     };
   });
 
-  // Сообщения в формате OpenAI / Groq API
+  // Формат для OpenAI / Groq API
   const groqMessages=currentChat.messages.map(m=>{
     let textContent=m.content||'';
     if(m.files&&m.files.length){
@@ -364,7 +364,7 @@ async function sendMessage(override){
   });
 
   try{
-    // 1. Пробуем получить ответ от Gemini
+    // 1. Первая попытка через Gemini API
     let res=await fetch(WORKER_ENDPOINT,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -375,9 +375,9 @@ async function sendMessage(override){
     const rawText=await res.text();
     try{data=JSON.parse(rawText)}catch(e){}
 
-    // 2. Если Gemini выбил ошибку, пробуем Groq
+    // 2. Если Gemini вернет ошибку, переключаемся на Groq API
     if(!res.ok||data?.error||!data?.candidates?.[0]?.content?.parts?.[0]?.text){
-      console.warn('Gemini API вернул ошибку, запрашиваем Groq API fallback...',data);
+      console.warn('Gemini API не ответил или вернул ошибку, пробуем Groq...', data);
 
       res=await fetch(WORKER_ENDPOINT,{
         method:'POST',
@@ -391,7 +391,7 @@ async function sendMessage(override){
 
     loading.remove();
 
-    // Извлекаем ответ (подходит для формата Gemini и формата Groq)
+    // Парсим универсальный ответ
     const replyText=data?.candidates?.[0]?.content?.parts?.[0]?.text || data?.choices?.[0]?.message?.content;
 
     if(replyText){
@@ -400,7 +400,7 @@ async function sendMessage(override){
       await saveChatsEncrypted();
     }else{
       const errDetail=JSON.stringify(data||rawText,null,2);
-      appendMessageUI('assistant',`❌ **Ошибка обоих API (Gemini и Groq):**\n\`\`\`json\n${errDetail}\n\`\`\``);
+      appendMessageUI('assistant',`❌ **Ошибка работы API (Gemini & Groq):**\n\`\`\`json\n${errDetail}\n\`\`\``);
     }
   }catch(err){
     loading.remove();
