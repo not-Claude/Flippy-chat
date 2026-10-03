@@ -54,11 +54,9 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
 .message.assistant>svg{width:28px;height:28px;flex-shrink:0;margin-top:2px}
 .body{flex:1;min-width:0;overflow-wrap:anywhere}
 .msg-img{max-width:260px;max-height:220px;border-radius:12px;object-fit:cover}
-/* attached text file chip in user bubble */
 .file-chip{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:5px 10px;font-size:13px;max-width:100%}
 .file-chip .i{width:14px;height:14px;flex-shrink:0}
 .file-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
-/* html preview card */
 .html-preview-card{border-radius:16px;overflow:hidden;border:1px solid var(--line);margin-top:4px;background:var(--card)}
 .html-preview-topbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--soft);border-bottom:1px solid var(--line);font-size:13px;font-weight:500;color:var(--mute)}
 .html-preview-topbar .dots-nav{display:flex;gap:5px}
@@ -99,11 +97,9 @@ pre code{display:block;overflow-x:auto;padding:14px 16px;font:400 13px/1.6 "JetB
 .sugs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sug{text-align:left;padding:14px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line);font-size:14px;line-height:1.4;transition:border-color .15s,transform .15s}
 .sug:hover{border-color:var(--brand);transform:translateY(-2px)}
-/* composer */
 .composer-wrap{padding:0 16px calc(14px + env(safe-area-inset-bottom,0px));flex-shrink:0}
 .composer{max-width:760px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:12px 12px 10px 18px;box-shadow:0 8px 30px -12px rgba(20,40,120,.25);transition:border-color .15s,box-shadow .15s}
 .composer:focus-within{border-color:var(--brand);box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 18%,transparent)}
-/* attachment chips row above textarea */
 .attach-chips{display:none;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .attach-chip{display:flex;align-items:center;gap:6px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:4px 8px 4px 6px;font-size:13px;max-width:220px}
 .attach-chip img{width:28px;height:28px;border-radius:7px;object-fit:cover;flex-shrink:0}
@@ -165,7 +161,6 @@ textarea::placeholder{color:var(--mute)}
 <script>
 const WORKER_ENDPOINT = "https://billowing-king-7514.fialkamy001.workers.dev";
 let decryptedChats = [], currentChatId = null;
-// attachedFiles: array of {type:'image'|'text', mimeType, name, previewUrl?, base64?, content?, lang?}
 let attachedFiles = [];
 
 const $ = id => document.getElementById(id);
@@ -202,6 +197,7 @@ $('menuBtn').onclick=()=>drawer(true);$('scrim').onclick=()=>drawer(false);
 // 🔑 АВТОМАТИЧЕСКИЙ КЛЮЧ
 function getOrCreateAutoKey(){let key=localStorage.getItem('auto_device_key');if(!key){const array=new Uint8Array(32);crypto.getRandomValues(array);key=Array.from(array,b=>b.toString(16).padStart(2,'0')).join('');localStorage.setItem('auto_device_key',key)}return key}
 const autoKey=getOrCreateAutoKey();
+
 // 🛡️ AES-256-GCM ШИФРОВАНИЕ
 async function deriveKey(passphrase,salt){const enc=new TextEncoder();const keyMaterial=await crypto.subtle.importKey("raw",enc.encode(passphrase),{name:"PBKDF2"},false,["deriveKey"]);return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:100000,hash:"SHA-256"},keyMaterial,{name:"AES-GCM",length:256},false,["encrypt","decrypt"])}
 async function encryptPayload(dataObj,passphrase){const salt=crypto.getRandomValues(new Uint8Array(16));const iv=crypto.getRandomValues(new Uint8Array(12));const key=await deriveKey(passphrase,salt);const enc=new TextEncoder();const ciphertext=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,enc.encode(JSON.stringify(dataObj)));return{salt:Array.from(salt),iv:Array.from(iv),ciphertext:Array.from(new Uint8Array(ciphertext))}}
@@ -214,8 +210,7 @@ async function loadChatsDecrypted(){const rawData=localStorage.getItem('bank_enc
 // ─── FILE HANDLING ───────────────────────────────────────────────
 const TEXT_EXTS = /\.(html?|css|js|ts|tsx|jsx|json|py|md|txt|csv|xml|ya?ml|sh|env|c|cpp|h|rs|go|java|kt|rb|php|swift|sql)$/i;
 const IMG_TYPES = /^image\//;
-const fileInput = $('fileInput');
-$('attachFileBtn').onclick = () => fileInput.click();
+const fileInput = $('fileInput');$('attachFileBtn').onclick = () => fileInput.click();
 fileInput.onchange = e => { [...e.target.files].forEach(handleFile); fileInput.value=''; };
 
 function langFromName(name) {
@@ -269,7 +264,6 @@ function renderAttachChips() {
   });
 }
 
-// drag-and-drop anywhere on page
 document.addEventListener('dragover', e => { e.preventDefault(); });
 document.addEventListener('drop', e => { e.preventDefault(); [...e.dataTransfer.files].forEach(handleFile); });
 
@@ -315,6 +309,7 @@ userInput.addEventListener('paste',e=>{[...e.clipboardData.files].forEach(f=>{e.
 $('codeBtn').onclick=()=>{const s=userInput.selectionStart;userInput.setRangeText('```\n\n```',s,userInput.selectionEnd,'end');userInput.setSelectionRange(s+4,s+4);userInput.focus();autosize();checkSendBtnState()};
 sendBtn.onclick=()=>sendMessage();
 
+// ─── ОТПРАВКА И АВТОМАТИЧЕСКИЙ FALLBACK НА GROQ ───────────────────
 async function sendMessage(override){
   const text=(typeof override==='string'?override:userInput.value).trim();
   if(!text&&!attachedFiles.length)return;
@@ -337,26 +332,80 @@ async function sendMessage(override){
 
   const loading=appendMessageUI('assistant','',null,null,true);
 
-  // build turns for AI
-  const turns=currentChat.messages.map(m=>{
-    let content=m.content||'';
+  // Сообщения в формате Gemini API
+  const geminiContents=currentChat.messages.map(m=>{
+    const parts=[];
+    if(m.content)parts.push({text:m.content});
     if(m.files&&m.files.length){
-      content+=(content?'\n\n':'')+m.files.map(f=>`Файл \`${f.name}\`:\n\`\`\`${f.lang}\n${f.content}\n\`\`\``).join('\n\n');
+      const fileTexts=m.files.map(f=>`Файл \`${f.name}\`:\n\`\`\`${f.lang}\n${f.content}\n\`\`\``).join('\n\n');
+      parts.push({text:fileTexts});
     }
-    if(!content&&m.images&&m.images.length)content='(изображение)';
-    return {role:m.role,content:content||'(пусто)'};
+    if(m.images&&m.images.length){
+      m.images.forEach(img=>{
+        if(img.base64)parts.push({inlineData:{mimeType:img.mimeType,data:img.base64}});
+      });
+    }
+    return {
+      role:m.role==='assistant'?'model':'user',
+      parts:parts.length?parts:[{text:' '}]
+    };
+  });
+
+  // Сообщения в формате OpenAI / Groq API
+  const groqMessages=currentChat.messages.map(m=>{
+    let textContent=m.content||'';
+    if(m.files&&m.files.length){
+      textContent+=(textContent?'\n\n':'')+m.files.map(f=>`Файл \`${f.name}\`:\n\`\`\`${f.lang}\n${f.content}\n\`\`\``).join('\n\n');
+    }
+    return {
+      role:m.role==='assistant'?'assistant':'user',
+      content:textContent||'(изображение)'
+    };
   });
 
   try{
-    const sample=window.claude?await claude.use("sample"):null;
-    if(!sample)throw new Error("ответы ИИ недоступны в этом просмотре");
-    const r=await sample(turns,{cache:false});
+    // 1. Пробуем получить ответ от Gemini
+    let res=await fetch(WORKER_ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({provider:'gemini',contents:geminiContents,messages:groqMessages})
+    });
+
+    let data=null;
+    const rawText=await res.text();
+    try{data=JSON.parse(rawText)}catch(e){}
+
+    // 2. Если Gemini выбил ошибку, пробуем Groq
+    if(!res.ok||data?.error||!data?.candidates?.[0]?.content?.parts?.[0]?.text){
+      console.warn('Gemini API вернул ошибку, запрашиваем Groq API fallback...',data);
+
+      res=await fetch(WORKER_ENDPOINT,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({provider:'groq',messages:groqMessages})
+      });
+
+      const groqRaw=await res.text();
+      try{data=JSON.parse(groqRaw)}catch(e){}
+    }
+
     loading.remove();
-    if(r&&r.text){
-      currentChat.messages.push({role:'assistant',content:r.text});
-      appendMessageUI('assistant',r.text);await saveChatsEncrypted();
-    }else appendMessageUI('assistant','**Пустой ответ.** Попробуйте переформулировать вопрос.');
-  }catch(err){loading.remove();appendMessageUI('assistant',`**Не удалось получить ответ.** ${err.message||err.code||''}`)}
+
+    // Извлекаем ответ (подходит для формата Gemini и формата Groq)
+    const replyText=data?.candidates?.[0]?.content?.parts?.[0]?.text || data?.choices?.[0]?.message?.content;
+
+    if(replyText){
+      currentChat.messages.push({role:'assistant',content:replyText});
+      appendMessageUI('assistant',replyText);
+      await saveChatsEncrypted();
+    }else{
+      const errDetail=JSON.stringify(data||rawText,null,2);
+      appendMessageUI('assistant',`❌ **Ошибка обоих API (Gemini и Groq):**\n\`\`\`json\n${errDetail}\n\`\`\``);
+    }
+  }catch(err){
+    loading.remove();
+    appendMessageUI('assistant',`❌ **Ошибка сети:** ${err.message||err}`);
+  }
 }
 
 // ─── HTML PREVIEW ─────────────────────────────────────────────────
@@ -365,10 +414,6 @@ function isHtmlContent(text){
   const t=text.trim();
   return /<!DOCTYPE\s+html/i.test(t)||/<html[\s>]/i.test(t)||/<body[\s>]/i.test(t)||
          (/<(div|section|article|main|header|nav|ul|table|form)[\s>]/i.test(t)&&/<\/html>/i.test(t));
-}
-function isHtmlCodeBlock(text){
-  // detect ```html ... ``` in markdown
-  return /```html\s*([\s\S]*?)```/i.test(text);
 }
 function extractHtmlFromCodeBlock(text){
   const m=text.match(/```html\s*([\s\S]*?)```/i);
@@ -392,7 +437,6 @@ function createHtmlPreviewCard(htmlContent, fileName){
   frame.src=URL.createObjectURL(blob);
   frame.style.height='400px';
 
-  // auto-resize to content
   frame.onload=()=>{
     try{
       const h=frame.contentDocument.documentElement.scrollHeight;
@@ -420,13 +464,11 @@ function appendMessageUI(role,text,images=[],files=[],loading=false){
   const body=role==='assistant'?Object.assign(document.createElement('div'),{className:'body'}):m;
   if(role==='assistant')m.appendChild(body);
 
-  // image attachments
   (images||[]).forEach(img=>{
     const im=document.createElement('img');im.className='msg-img';im.src=img.previewUrl;im.alt='Изображение';
     body.appendChild(im);
   });
 
-  // text file chips
   (files||[]).forEach(f=>{
     const chip=document.createElement('div');chip.className='file-chip';
     chip.innerHTML=ic('file');
@@ -440,7 +482,6 @@ function appendMessageUI(role,text,images=[],files=[],loading=false){
     if(role==='assistant'){
       box.className='md';
       box.innerHTML=DOMPurify.sanitize(marked.parse(text));
-      // syntax highlight + HTML preview buttons for code blocks
       box.querySelectorAll('pre').forEach(pre=>{
         const code=pre.querySelector('code');if(!code)return;
         const langClass=(code.className.match(/language-(\w+)/)||[])[1]||'';
@@ -448,10 +489,8 @@ function appendMessageUI(role,text,images=[],files=[],loading=false){
         const bar=document.createElement('div');bar.className='cbar';
         bar.innerHTML=`<span>${langClass||'код'}</span>`;
         const rightBtns=document.createElement('div');rightBtns.style.display='flex';rightBtns.style.gap='4px';
-        // copy button
         const cb=document.createElement('button');cb.innerHTML=ic('copy')+' Копировать';cb.onclick=()=>copyText(code.textContent,cb);
         rightBtns.appendChild(cb);
-        // html preview button
         if(langClass==='html'||langClass==='htm'){
           const pb=document.createElement('button');pb.className='cbar-preview';pb.innerHTML=ic('eye')+' Запустить';
           pb.onclick=()=>{
@@ -465,10 +504,8 @@ function appendMessageUI(role,text,images=[],files=[],loading=false){
         }
         bar.appendChild(rightBtns);pre.prepend(bar);
       });
-      // auto-detect standalone HTML in text (not inside code block)
       const rawHtml=extractHtmlFromCodeBlock(text);
-      if(rawHtml){/* already handled above via code blocks */}
-      else if(isHtmlContent(text)){
+      if(!rawHtml && isHtmlContent(text)){
         const card=createHtmlPreviewCard(text,'Предпросмотр');
         body.appendChild(card);
       }
